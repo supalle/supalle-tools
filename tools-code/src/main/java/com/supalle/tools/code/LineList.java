@@ -32,7 +32,7 @@ public class LineList<E> extends AbstractLinkedArrayList<E> {
         addAll(collection);
     }
 
-    public LineList(Collection<? extends E> collection, int lineSize) {
+    public LineList(int lineSize, Collection<? extends E> collection) {
         this(lineSize);
         addAll(collection);
     }
@@ -585,12 +585,29 @@ public class LineList<E> extends AbstractLinkedArrayList<E> {
         return lineList.iterator();
     }
 
+    public static <E> LineList<E> of(E... e) {
+        final LineList<E> lineList = new LineList<>();
+        return of(lineList, e);
+    }
+
+    public static <E> LineList<E> of(LineList<E> lineList, E... e) {
+        if (lineList == null) {
+            lineList = new LineList<>();
+        }
+        if (e != null && e.length > 0) {
+            for (E item : e) {
+                lineList.add(item);
+            }
+        }
+        return lineList;
+    }
+
     public static <E> LineList<E> of(Collection<? extends E> collection) {
         return new LineList<>(collection);
     }
 
     public static <E> LineList<E> of(Collection<? extends E> collection, int lineSize) {
-        return new LineList<>(collection, lineSize);
+        return new LineList<>(lineSize, collection);
     }
 
     public static <E> LineList<E> vanishOf(Collection<? extends E> collection) {
@@ -598,7 +615,7 @@ public class LineList<E> extends AbstractLinkedArrayList<E> {
         return vanishAddAll(lineList, collection);
     }
 
-    public static <E> LineList<E> vanishOf(Collection<? extends E> collection, int lineSize) {
+    public static <E> LineList<E> vanishOf(int lineSize, Collection<? extends E> collection) {
         final LineList<E> lineList = new LineList<>(lineSize);
         return vanishAddAll(lineList, collection);
     }
