@@ -5,7 +5,6 @@ import java.util.List;
 
 /**
  * @author Supalle
- * @date 2021年8月4日
  */
 public abstract class AbstractLinkedArrayList<E> implements List<E> {
     static final int CACHE_LINE_SIZE = 64;
@@ -30,7 +29,7 @@ public abstract class AbstractLinkedArrayList<E> implements List<E> {
         return collection == null || collection.isEmpty();
     }
 
-    protected final  boolean isNotEmpty(Collection<?> collection) {
+    protected final boolean isNotEmpty(Collection<?> collection) {
         return !isEmpty(collection);
     }
 
