@@ -6,6 +6,7 @@ import java.util.List;
 /**
  * @author Supalle
  */
+@SuppressWarnings("all")
 public abstract class AbstractLinkedArrayList<E> implements List<E> {
     static final int CACHE_LINE_SIZE = 64;
     static final int OBJECT_HEADER_SIZE = 16;

@@ -5,6 +5,7 @@ import java.util.*;
 /**
  * @author Supalle
  */
+@SuppressWarnings("all")
 public class LineList<E> extends AbstractLinkedArrayList<E> {
 
     private Object[] headElements;
