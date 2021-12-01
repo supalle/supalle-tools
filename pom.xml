@@ -6,7 +6,7 @@
 
     <groupId>com.supalle</groupId>
     <artifactId>tools-bom</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <modules>
         <module>tools-code</module>
     </modules>
@@ -47,6 +47,7 @@
             <artifactId>lombok</artifactId>
             <version>1.18.18</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <!--============= test dependencies ================-->
