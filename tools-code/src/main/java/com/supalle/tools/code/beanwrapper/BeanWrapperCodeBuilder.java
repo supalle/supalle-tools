@@ -32,11 +32,7 @@ public class BeanWrapperCodeBuilder {
 
     public static void assertNoArgsConstructor(Class<?> clazz) {
         try {
-            if (clazz.isAnonymousClass()) {
-                clazz.newInstance();
-            } else {
-                clazz.getConstructor();
-            }
+            clazz.newInstance();
         } catch (Exception e) {
             throw new IllegalArgumentException("class: " + clazz.getName() + " NoArgsConstructor not found.", e);
         }
@@ -133,17 +129,17 @@ public class BeanWrapperCodeBuilder {
     }
 
     private static String buildAnonymousClassInstanceMethod(Class<?> clazz) {
-        String template = "public final java.lang.reflect.Constructor<%s> constructor;\n" +
+        String template = "public final Class<?> clazz;\n" +
                 "    {\n" +
                 "          try {\n" +
-                "              constructor = (java.lang.reflect.Constructor<%s>) Class.forName(\"%s\").getConstructor();\n" +
+                "              clazz = Class.forName(\"%s\");\n" +
                 "          } catch (Exception e) {\n" +
                 "              throw new RuntimeException(e);\n" +
                 "          }\n" +
                 "    }\n" +
-                "    @Override public %s instance() { try { return constructor.newInstance(); } catch (Exception e) { throw new RuntimeException(e); } }";
-        return String.format(template, getFormatClassName(clazz)
-                , getFormatClassName(clazz), clazz.getName()
+                "    @Override public %s instance() { try { return (%s)clazz.newInstance(); } catch (Exception e) { throw new RuntimeException(e); } }";
+        return String.format(template, clazz.getName()
+                , getFormatClassName(clazz)
                 , getFormatClassName(clazz));
     }
 
