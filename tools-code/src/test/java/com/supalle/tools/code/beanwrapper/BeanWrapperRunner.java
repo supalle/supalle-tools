@@ -20,8 +20,8 @@ public class BeanWrapperRunner {
                 .measurementIterations(5)
                 .mode(Mode.Throughput)
                 .forks(1)
-                .threads(1)
-//                .threads(Runtime.getRuntime().availableProcessors())
+//                .threads(1)
+                .threads(Runtime.getRuntime().availableProcessors())
                 .measurementTime(TimeValue.seconds(1))
                 .warmupTime(TimeValue.seconds(1))
                 .build();

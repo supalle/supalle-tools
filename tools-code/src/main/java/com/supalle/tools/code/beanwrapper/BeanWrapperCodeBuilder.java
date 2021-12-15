@@ -1,7 +1,8 @@
 package com.supalle.tools.code.beanwrapper;
 
+import com.supalle.tools.code.LineList;
+
 import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
 import java.util.List;
 
 public class BeanWrapperCodeBuilder {
@@ -60,7 +61,7 @@ public class BeanWrapperCodeBuilder {
 
     private static Object buildSetPropertyAccesses(List<String> propertyAccesses) {
         int index = 0;
-        List<String> lines = new ArrayList<>();
+        List<String> lines = new LineList<>();
         for (String propertyAccess : propertyAccesses) {
             lines.add("        this.propertyAccesses[" + index + "]=" + propertyAccess + ";");
             index++;
@@ -196,7 +197,7 @@ public class BeanWrapperCodeBuilder {
         private String packageName;
         private String clazzName;
         private String instanceMethod;
-        private final List<String> propertyAccesses = new ArrayList<>();
+        private final List<String> propertyAccesses = new LineList<>();
 
         public Class<?> getClazz() {
             return clazz;
