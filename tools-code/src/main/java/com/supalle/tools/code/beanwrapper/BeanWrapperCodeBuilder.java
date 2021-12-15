@@ -1,7 +1,6 @@
 package com.supalle.tools.code.beanwrapper;
 
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -190,54 +189,6 @@ public class BeanWrapperCodeBuilder {
         }
         method += " }";
         return method;
-    }
-
-    public static void main(String[] args) throws ClassNotFoundException {
-
-        Bean.BB bean3 = new Bean.BB() {
-
-        };
-
-        Class<?> clazz = bean3.getClass();
-        System.out.println(clazz.isMemberClass());
-
-        System.out.println(clazz.getTypeName());
-        System.out.println(getFormatClassTypeName(clazz));
-        System.out.println(clazz.getTypeName());
-        System.out.println(clazz.getTypeName());
-        System.out.println(getFormatClassTypeName(clazz));
-
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            System.out.println(field.getName());
-        }
-
-        Class<?> aClass = Class.forName("com.supalle.tools.code.beanwrapper.BeanWrapperCodeBuilder$1");
-        System.out.println(aClass);
-
-        Bean<Long> bean = new Bean<>();
-        BeanWrapperCode beanWrapperCode = BeanWrapperCodeBuilder.build(clazz);
-        System.out.println(beanWrapperCode.getWrapperCode());
-
-    }
-
-    public static class Bean<T> {
-
-        public T[] getBean2() {
-            return null;
-        }
-
-        public void setBean2(T bean2) {
-
-        }
-
-        public static class BB {
-
-        }
-    }
-
-    static class Bean2<T> {
-
     }
 
     static class BeanWrapperCodeOptions {
