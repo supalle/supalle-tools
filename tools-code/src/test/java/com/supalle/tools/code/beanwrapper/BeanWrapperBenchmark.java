@@ -6,6 +6,8 @@ import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 
+import java.nio.file.Paths;
+
 @State(Scope.Benchmark)
 public class BeanWrapperBenchmark {
 
@@ -43,6 +45,7 @@ public class BeanWrapperBenchmark {
     }
 
     public static void main(String[] args) {
+        // BeanWrapperConfig.setOutPath(Paths.get("D:\\0_notebook\\supalle-tools\\tools-code\\src\\test\\java"));
         BeanWrapperBenchmark benchmark = new BeanWrapperBenchmark();
         System.out.println(benchmark.setter());
         System.out.println(benchmark.supalleBeanWrapper());

@@ -2,10 +2,13 @@ package com.supalle.tools.code;
 
 import com.supalle.tools.code.beanwrapper.*;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -25,6 +28,7 @@ public class BeanWrappers {
                 BeanWrapperCode beanWrapperCode = BeanWrapperCodeBuilder.build(clazz);
                 Class<? extends BeanWrapper> wrapperClass = existsBeaWrapper(beanWrapperCode.getWrapperFullName());
                 if (wrapperClass == null) {
+                    writeOutJavaFile(beanWrapperCode);
                     wrapperClass = (Class<? extends BeanWrapper>) JavaCompilers.getCompiler()
                             .compile(beanWrapperCode.getWrapperFullName(), beanWrapperCode.getWrapperCode());
                 }
@@ -37,6 +41,22 @@ public class BeanWrappers {
             }
         }
         return beanWrapper;
+    }
+
+    private static void writeOutJavaFile(BeanWrapperCode beanWrapperCode) {
+        if (BeanWrapperConfig.getOutPath() != null) {
+            Path outPath = BeanWrapperConfig.getOutPath();
+            Path path = Paths.get(outPath.toString(), beanWrapperCode.getWrapperFullName().replace(".", File.separator) + ".java");
+            try {
+                File file = path.toFile();
+                if (!file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+                }
+                Files.write(path, Collections.singletonList(beanWrapperCode.getWrapperCode()), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private static Class<? extends BeanWrapper<?>> existsBeaWrapper(String beanWrapperFullName) {
