@@ -5,7 +5,9 @@ import com.supalle.tools.code.model.Student;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
+import org.springframework.cglib.beans.BeanCopier;
 
+import java.beans.PropertyDescriptor;
 import java.nio.file.Paths;
 
 @State(Scope.Benchmark)
@@ -44,10 +46,46 @@ public class BeanWrapperBenchmark {
         return BeanWrappers.copy(bean);
     }
 
+    private final BeanCopier beanCopier = BeanCopier.create(Student.class, Student.class, true);
+
+    @Benchmark
+    public Object cglibCopier() {
+        Student student = new Student();
+        beanCopier.copy(bean, student, null);
+        return student;
+    }
+
     public static void main(String[] args) {
-        // BeanWrapperConfig.setOutPath(Paths.get("D:\\0_notebook\\supalle-tools\\tools-code\\src\\test\\java"));
+//        PropertyDescriptor[] properties = WrapperUtil.findProperties(Student.class);
+//        int index = 1;
+//        for (PropertyDescriptor property : properties) {
+//            String s = "case %d: return o.%s();\n";
+//            System.out.printf(s, index++, property.getReadMethod().getName());
+//        }
+//        System.out.println();
+//        System.out.println();
+//          index = 1;
+//        for (PropertyDescriptor property : properties) {
+//            String s = "case %d: o.%s((%s)v);return;\n";
+//            System.out.printf(s, index++, property.getWriteMethod().getName(),property.getPropertyType().getTypeName());
+//        }
+//
+//        for (PropertyDescriptor property : properties) {
+//            System.out.println(String.format("this.propertyAccesses[i] = new PA(\"%s\", %s.class, i);", property.getName(), property.getPropertyType().getTypeName()));
+//        }
+//
+        BeanWrapperConfig.setOutPath(Paths.get("D:\\0_notebook\\supalle-tools\\tools-code\\src\\test\\java"));
         BeanWrapperBenchmark benchmark = new BeanWrapperBenchmark();
         System.out.println(benchmark.setter());
         System.out.println(benchmark.supalleBeanWrapper());
+        System.out.println(benchmark.cglibCopier());
+    }
+
+    public static void setV(Object o) {
+        setI((int) o);
+    }
+
+    public static void setI(int o) {
+        System.out.println(o);
     }
 }

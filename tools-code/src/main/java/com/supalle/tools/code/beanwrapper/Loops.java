@@ -2,8 +2,29 @@ package com.supalle.tools.code.beanwrapper;
 
 public class Loops {
 
+    public static final void loop(Object source, Object target, PropertyAccess[] propertyAccesses) {
+        PropertyAccess propertyAccess;
+        Object v;
+        propertyAccess = propertyAccesses[0];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[1];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[2];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[3];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[4];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[5];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[6];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[7];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[8];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[9];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[10];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[11];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[12];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[13];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[14];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[15];v = propertyAccess.get(source);propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[16];v = propertyAccess.get(source);propertyAccess.set(target, v);
+    }
 
-    public static void loop(Object source, Object target, PropertyAccess[] propertyAccesses) {
+    public static void loop0(Object source, Object target, PropertyAccess[] propertyAccesses) {
 
         int length = propertyAccesses.length;
         int index = 0;
@@ -75,56 +96,13 @@ public class Loops {
                     loop16(source, target, propertyAccesses, index);
                     return;
                 }
-                case 32: {
-                    loop32(source, target, propertyAccesses, index);
-                    return;
-                }
-                case 64: {
-                    loop64(source, target, propertyAccesses, index);
-                    return;
-                }
-                case 128: {
-                    loop128(source, target, propertyAccesses, index);
-                    return;
-                }
-                case 256: {
-                    loop256(source, target, propertyAccesses, index);
-                    return;
-                }
-                case 512: {
-                    loop512(source, target, propertyAccesses, index);
+                case 17: {
+                    loop17(source, target, propertyAccesses, index);
                     return;
                 }
                 default: {
-                    if (sub > 512) {
-                        loop512(source, target, propertyAccesses, index);
-                        index += 512;
-                        continue;
-                    }
-                    if (sub > 256) {
-                        loop256(source, target, propertyAccesses, index);
-                        index += 256;
-                        continue;
-                    }
-                    if (sub > 128) {
-                        loop128(source, target, propertyAccesses, index);
-                        index += 128;
-                        continue;
-                    }
-                    if (sub > 64) {
-                        loop64(source, target, propertyAccesses, index);
-                        index += 64;
-                        continue;
-                    }
-                    if (sub > 32) {
-                        loop32(source, target, propertyAccesses, index);
-                        index += 32;
-                        continue;
-                    }
-                    if (sub > 16) {
-                        loop16(source, target, propertyAccesses, index);
-                        index += 16;
-                    }
+                    loop17(source, target, propertyAccesses, index);
+                    index += 17;
                 }
             }
         }
@@ -647,6 +625,65 @@ public class Loops {
         v = propertyAccess.get(source);
         propertyAccess.set(target, v);
         propertyAccess = propertyAccesses[offset + 15];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+
+
+    }
+
+    private static void loop17(Object source, Object target, PropertyAccess[] propertyAccesses, int offset) {
+        PropertyAccess propertyAccess;
+        Object v;
+
+        propertyAccess = propertyAccesses[offset];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 1];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 2];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 3];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 4];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 5];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 6];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 7];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 8];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 9];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 10];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 11];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 12];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 13];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 14];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 15];
+        v = propertyAccess.get(source);
+        propertyAccess.set(target, v);
+        propertyAccess = propertyAccesses[offset + 16];
         v = propertyAccess.get(source);
         propertyAccess.set(target, v);
 
