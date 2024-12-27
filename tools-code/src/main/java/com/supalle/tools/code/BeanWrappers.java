@@ -1,360 +1,127 @@
 package com.supalle.tools.code;
 
-import com.supalle.tools.code.beanwrapper.*;
+import com.supalle.tools.code.beanwrapper.BeanWrapper;
+import com.supalle.tools.code.beanwrapper.BeanWrapperImpl;
+import com.supalle.tools.code.beanwrapper.PropertyAccess;
+import com.supalle.tools.code.beanwrapper.PropertyAccessLoops;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 public class BeanWrappers {
 
     public static final ConcurrentMap<Class<?>, BeanWrapper<?>> BEAN_WRAPPER_CACHE = new ConcurrentHashMap<>(32);
 
+    @SuppressWarnings("unchecked")
     public static <T> BeanWrapper<T> getWrapper(Class<T> clazz) {
         BeanWrapper<T> beanWrapper = (BeanWrapper<T>) BEAN_WRAPPER_CACHE.get(clazz);
-        if (beanWrapper == null) {
-            synchronized (BEAN_WRAPPER_CACHE) {
-                beanWrapper = (BeanWrapper<T>) BEAN_WRAPPER_CACHE.get(clazz);
-                if (beanWrapper != null) {
-                    return beanWrapper;
-                }
-                BeanWrapperCode beanWrapperCode = BeanWrapperCodeBuilder.build(clazz);
-                Class<? extends BeanWrapper> wrapperClass = existsBeaWrapper(beanWrapperCode.getWrapperFullName());
-                if (wrapperClass == null) {
-                    writeOutJavaFile(beanWrapperCode);
-                    wrapperClass = (Class<? extends BeanWrapper>) JavaCompilers.getCompiler()
-                            .compile(beanWrapperCode.getWrapperFullName(), beanWrapperCode.getWrapperCode());
-                }
-                try {
-                    beanWrapper = wrapperClass.newInstance();
-                    BEAN_WRAPPER_CACHE.put(clazz, beanWrapper);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+        if (beanWrapper != null) {
+            return beanWrapper;
         }
-        return beanWrapper;
+        return (BeanWrapper<T>) BEAN_WRAPPER_CACHE.computeIfAbsent(clazz, BeanWrapperImpl::new);
     }
 
-    private static void writeOutJavaFile(BeanWrapperCode beanWrapperCode) {
-        if (BeanWrapperConfig.getOutPath() != null) {
-            Path outPath = BeanWrapperConfig.getOutPath();
-            Path path = Paths.get(outPath.toString(), beanWrapperCode.getWrapperFullName().replace(".", File.separator) + ".java");
-            try {
-                File file = path.toFile();
-                if (!file.getParentFile().exists()) {
-                    file.getParentFile().mkdirs();
-                }
-                Files.write(path, Collections.singletonList(beanWrapperCode.getWrapperCode()), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    @SuppressWarnings("unchecked")
+    private static <T> Class<T> getClazz(T bean) {
+        return (Class<T>) bean.getClass();
     }
 
-    private static Class<? extends BeanWrapper<?>> existsBeaWrapper(String beanWrapperFullName) {
-        try {
-            Class<?> clazz = Class.forName(beanWrapperFullName);
-            return (Class<? extends BeanWrapper<?>>) clazz;
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-
-    public static Object copy(Object bean) {
+    public static <T> T copy(T bean) {
         if (bean == null) {
             return null;
         }
-        Object t = getWrapper(bean.getClass()).instance();
-        copyTo(bean, t);
-        return t;
+        BeanWrapper<T> beanWrapper = getWrapper(getClazz(bean));
+        T newInstance = beanWrapper.newInstance();
+        PropertyAccessLoops.copyLoop(bean, newInstance, beanWrapper.getPropertyAccesses());
+        return newInstance;
     }
 
-
-    public static Object copy(Object bean, String... ignoredProperties) {
+    public static <T> T copy(T bean, String... ignoredProperties) {
         if (bean == null) {
             return null;
         }
-        Object t = getWrapper(bean.getClass()).instance();
-        copyTo(bean, t, ignoredProperties);
-        return t;
+        if (ignoredProperties == null || ignoredProperties.length == 0) {
+            return copy(bean);
+        }
+
+        BeanWrapper<T> beanWrapper = getWrapper(getClazz(bean));
+        T newInstance = beanWrapper.newInstance();
+        copyProperties(bean, newInstance, ignoredProperties);
+        return newInstance;
     }
 
-
-    public static Object copy(Object bean, Set<String> ignoredPropertySet) {
+    public static <T> T copy(T bean, Set<String> ignoredPropertySet) {
         if (bean == null) {
             return null;
         }
-        Object t = getWrapper(bean.getClass()).instance();
-        copyTo(bean, t, ignoredPropertySet);
-        return t;
+        if (ignoredPropertySet == null || ignoredPropertySet.isEmpty()) {
+            return copy(bean);
+        }
+
+        BeanWrapper<T> beanWrapper = getWrapper(getClazz(bean));
+        T newInstance = beanWrapper.newInstance();
+        copyProperties(bean, newInstance, ignoredPropertySet);
+        return newInstance;
     }
 
 
-    public static void copyTo(BeanWrapper beanWrapper, Object sourceBean, Object targetBean) {
-        if (sourceBean == null || targetBean == null || beanWrapper == null) {
+    public static void copyProperties(Object source, Object target, String... ignoredProperties) {
+        if (source == null || target == null) {
             return;
         }
-        PropertyAccess[] propertyAccesses = beanWrapper.getPropertyAccesses();
-        for (PropertyAccess propertyAccess : propertyAccesses) {
-            propertyAccess.set(targetBean, propertyAccess.get(sourceBean));
+        if (ignoredProperties == null || ignoredProperties.length == 0) {
+            copyProperties(source, target);
+            return;
         }
+        copyProperties(source, target, new HashSet<>(Arrays.asList(ignoredProperties)));
     }
 
-    public static void copyTo(Object sourceBean, Object targetBean) {
-        if (sourceBean == null || targetBean == null) {
+    public static void copyProperties(Object source, Object target) {
+        if (source == null || target == null) {
             return;
         }
-        Class<?> sourceBeanClass = sourceBean.getClass();
-        Class<?> targetBeanClass = targetBean.getClass();
-        BeanWrapper sourceWrapper = getWrapper(sourceBeanClass);
-        if (sourceBeanClass == targetBeanClass) {
-            Loops.loop(sourceBean, targetBean, sourceWrapper.getPropertyAccesses());
+        Class<Object> sourceClass = getClazz(source);
+        Class<Object> targetClass = getClazz(target);
+
+        if (sourceClass.equals(targetClass)) {
+            BeanWrapper<Object> beanWrapper = getWrapper(sourceClass);
+            PropertyAccessLoops.copyLoop(source, target, beanWrapper.getPropertyAccesses());
             return;
         }
-        BeanWrapper targetWrapper = getWrapper(targetBeanClass);
 
-        PropertyAccess[] sourceWrapperPropertyAccesses = sourceWrapper.getPropertyAccesses();
-        PropertyAccess[] targetWrapperPropertyAccesses = targetWrapper.getPropertyAccesses();
-
-        if (targetWrapperPropertyAccesses.length > 16) {
-            Map<String, PropertyAccess> targetMap = Arrays.stream(targetWrapperPropertyAccesses).collect(Collectors.toMap(PropertyAccess::getPropertyName, e -> e));
-            for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-                PropertyAccess targetPropertyAccess = targetMap.get(sourceWrapperPropertyAccess.getPropertyName());
-                if (targetPropertyAccess != null) {
-                    targetPropertyAccess.set(targetBean, sourceWrapperPropertyAccess.get(sourceBean));
-                }
-            }
-        } else {
-            for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-                for (PropertyAccess targetWrapperPropertyAccess : targetWrapperPropertyAccesses) {
-                    if (sourceWrapperPropertyAccess.getPropertyName().equals(targetWrapperPropertyAccess.getPropertyName())) {
-                        targetWrapperPropertyAccess.set(targetBean, sourceWrapperPropertyAccess.get(sourceBean));
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-
-    public static void copyTo(Object sourceBean, Object targetBean, String... ignoredProperties) {
-        if (sourceBean == null || targetBean == null) {
-            return;
-        }
-        if (ignoredProperties != null && ignoredProperties.length > 0) {
-            copyTo(sourceBean, targetBean, new HashSet<>(Arrays.asList(ignoredProperties)));
-            return;
-        }
-        copyTo(sourceBean, targetBean);
-    }
-
-
-    public static void copyTo(Object sourceBean, Object targetBean, Set<String> ignoredPropertySet) {
-        if (sourceBean == null || targetBean == null) {
-            return;
-        }
-        if (WrapperUtil.isEmpty(ignoredPropertySet)) {
-            copyTo(sourceBean, targetBean);
-            return;
-        }
-        BeanWrapper sourceWrapper = getWrapper(sourceBean.getClass());
-        BeanWrapper targetWrapper = getWrapper(sourceBean.getClass());
-
-        PropertyAccess[] sourceWrapperPropertyAccesses = sourceWrapper.getPropertyAccesses();
-        PropertyAccess[] targetWrapperPropertyAccesses = targetWrapper.getPropertyAccesses();
-
-        Map<String, PropertyAccess> targetMap = Arrays.stream(targetWrapperPropertyAccesses).filter(e -> !ignoredPropertySet.contains(e.getPropertyName())).collect(Collectors.toMap(PropertyAccess::getPropertyName, e -> e));
-        for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-            PropertyAccess targetPropertyAccess = targetMap.get(sourceWrapperPropertyAccess.getPropertyName());
-            if (targetPropertyAccess != null) {
-                targetPropertyAccess.set(targetBean, sourceWrapperPropertyAccess.get(sourceBean));
-            }
-        }
-    }
-
-
-    public static void copyPropertiesTo(Object sourceBean, Object targetBean, String... properties) {
-        if (sourceBean == null || targetBean == null) {
-            return;
-        }
-        if (properties != null && properties.length > 0) {
-            copyPropertiesTo(sourceBean, targetBean, new HashSet<>(Arrays.asList(properties)));
-            return;
-        }
-        copyTo(sourceBean, targetBean);
-    }
-
-
-    public static void copyPropertiesTo(Object sourceBean, Object targetBean, Set<String> propertySet) {
-        if (sourceBean == null || targetBean == null || WrapperUtil.isEmpty(propertySet)) {
-            return;
-        }
-        BeanWrapper sourceWrapper = getWrapper(sourceBean.getClass());
-        BeanWrapper targetWrapper = getWrapper(sourceBean.getClass());
-
-        PropertyAccess[] sourceWrapperPropertyAccesses = sourceWrapper.getPropertyAccesses();
-        PropertyAccess[] targetWrapperPropertyAccesses = targetWrapper.getPropertyAccesses();
-
-        Map<String, PropertyAccess> targetMap = Arrays.stream(targetWrapperPropertyAccesses).filter(e -> propertySet.contains(e.getPropertyName())).collect(Collectors.toMap(PropertyAccess::getPropertyName, e -> e));
-        for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-            PropertyAccess targetPropertyAccess = targetMap.get(sourceWrapperPropertyAccess.getPropertyName());
-            if (targetPropertyAccess != null) {
-                targetPropertyAccess.set(targetBean, sourceWrapperPropertyAccess.get(sourceBean));
-            }
-        }
-    }
-
-    public static Object copyDeep(Object bean) {
-        if (bean == null) {
-            return null;
-        }
-        Object t = getWrapper(bean.getClass()).instance();
-        copyTo(bean, t);
-        return t;
-    }
-
-    public static Object copyDeep(Object bean, String... ignoredProperties) {
-        if (bean == null) {
-            return null;
-        }
-        Object t = getWrapper(bean.getClass()).instance();
-        copyTo(bean, t, ignoredProperties);
-        return t;
-    }
-
-    public static Object copyDeep(Object bean, Set<String> ignoredPropertySet) {
-        if (bean == null) {
-            return null;
-        }
-        Object t = getWrapper(bean.getClass()).instance();
-        copyTo(bean, t, ignoredPropertySet);
-        return t;
-    }
-
-    public static void copyDeepTo(Object sourceBean, Object targetBean) {
-        if (sourceBean == null || targetBean == null) {
-            return;
-        }
-        Class<?> sourceBeanClass = sourceBean.getClass();
-        Class<?> targetBeanClass = targetBean.getClass();
-        BeanWrapper sourceWrapper = getWrapper(sourceBeanClass);
-        if (targetBeanClass == targetBeanClass) {
-            for (PropertyAccess propertyAccess : sourceWrapper.getPropertyAccesses()) {
-                copyPropertyDeep(sourceBean, targetBean, propertyAccess, propertyAccess);
-            }
-            return;
-        }
-        BeanWrapper targetWrapper = getWrapper(targetBeanClass);
-
-        PropertyAccess[] sourceWrapperPropertyAccesses = sourceWrapper.getPropertyAccesses();
-        PropertyAccess[] targetWrapperPropertyAccesses = targetWrapper.getPropertyAccesses();
-
-        if (targetWrapperPropertyAccesses.length > 16) {
-            Map<String, PropertyAccess> targetMap = Arrays.stream(targetWrapperPropertyAccesses).collect(Collectors.toMap(PropertyAccess::getPropertyName, e -> e));
-            for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-                PropertyAccess targetPropertyAccess = targetMap.get(sourceWrapperPropertyAccess.getPropertyName());
-                if (targetPropertyAccess != null) {
-                    copyPropertyDeep(sourceBean, targetBean, sourceWrapperPropertyAccess, targetPropertyAccess);
-                }
-            }
-        } else {
-            for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-                for (PropertyAccess targetWrapperPropertyAccess : targetWrapperPropertyAccesses) {
-                    if (sourceWrapperPropertyAccess.getPropertyName().equals(targetWrapperPropertyAccess.getPropertyName())) {
-                        copyPropertyDeep(sourceBean, targetBean, sourceWrapperPropertyAccess, targetWrapperPropertyAccess);
-                        break;
-                    }
-                }
-            }
-        }
+        BeanWrapper<Object> sourceBeanWrapper = getWrapper(sourceClass);
+        BeanWrapper<Object> targetBeanWrapper = getWrapper(targetClass);
+        PropertyAccess<Object>[] targetBeanPropertyAccesses = targetBeanWrapper.getPropertyAccesses();
+        Map<String, PropertyAccess<Object>> propertyAccessMapping = sourceBeanWrapper.getPropertyAccessMapping();
+        PropertyAccessLoops.copyLoop(source, target, targetBeanPropertyAccesses, propertyAccessMapping);
 
     }
 
-    public static void copyDeepTo(Object sourceBean, Object targetBean, String... ignoredProperties) {
-        if (sourceBean == null || targetBean == null) {
+    public static void copyProperties(Object source, Object target, Set<String> ignoredPropertySet) {
+        if (source == null || target == null) {
             return;
         }
-        if (ignoredProperties != null && ignoredProperties.length > 0) {
-            copyDeepTo(sourceBean, targetBean, new HashSet<>(Arrays.asList(ignoredProperties)));
+        if (ignoredPropertySet == null || ignoredPropertySet.isEmpty()) {
+            copyProperties(source, target);
             return;
         }
-        copyDeepTo(sourceBean, targetBean);
+        Class<Object> sourceClass = getClazz(source);
+        Class<Object> targetClass = getClazz(target);
+
+        if (sourceClass.equals(targetClass)) {
+            BeanWrapper<Object> beanWrapper = getWrapper(sourceClass);
+            PropertyAccessLoops.copyLoop(source, target, beanWrapper.getPropertyAccesses(), ignoredPropertySet);
+            return;
+        }
+
+        BeanWrapper<Object> sourceBeanWrapper = getWrapper(sourceClass);
+        BeanWrapper<Object> targetBeanWrapper = getWrapper(targetClass);
+        PropertyAccess<Object>[] targetBeanPropertyAccesses = targetBeanWrapper.getPropertyAccesses();
+        Map<String, PropertyAccess<Object>> propertyAccessMapping = sourceBeanWrapper.getPropertyAccessMapping();
+        PropertyAccessLoops.copyLoop(source, target, targetBeanPropertyAccesses, propertyAccessMapping, ignoredPropertySet);
     }
-
-    public static void copyDeepTo(Object sourceBean, Object targetBean, Set<String> ignoredPropertySet) {
-        if (sourceBean == null || targetBean == null || WrapperUtil.isEmpty(ignoredPropertySet)) {
-            return;
-        }
-
-        BeanWrapper sourceWrapper = getWrapper(sourceBean.getClass());
-        BeanWrapper targetWrapper = getWrapper(sourceBean.getClass());
-
-        PropertyAccess[] sourceWrapperPropertyAccesses = sourceWrapper.getPropertyAccesses();
-        PropertyAccess[] targetWrapperPropertyAccesses = targetWrapper.getPropertyAccesses();
-
-        Map<String, PropertyAccess> targetMap = Arrays.stream(targetWrapperPropertyAccesses).filter(e -> !ignoredPropertySet.contains(e.getPropertyName())).collect(Collectors.toMap(PropertyAccess::getPropertyName, e -> e));
-        for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-            PropertyAccess targetPropertyAccess = targetMap.get(sourceWrapperPropertyAccess.getPropertyName());
-            if (targetPropertyAccess != null) {
-                copyPropertyDeep(sourceBean, targetBean, sourceWrapperPropertyAccess, targetPropertyAccess);
-            }
-        }
-    }
-
-    public static void copyDeepPropertiesTo(Object sourceBean, Object targetBean, String... properties) {
-        if (sourceBean == null || targetBean == null) {
-            return;
-        }
-        if (properties != null && properties.length > 0) {
-            copyDeepPropertiesTo(sourceBean, targetBean, new HashSet<>(Arrays.asList(properties)));
-            return;
-        }
-        copyDeepTo(sourceBean, targetBean);
-    }
-
-    public static void copyDeepPropertiesTo(Object sourceBean, Object targetBean, Set<String> properties) {
-        if (sourceBean == null || targetBean == null) {
-            return;
-        }
-        if (WrapperUtil.isEmpty(properties)) {
-            copyDeepTo(sourceBean, targetBean);
-            return;
-        }
-        BeanWrapper sourceWrapper = getWrapper(sourceBean.getClass());
-        BeanWrapper targetWrapper = getWrapper(sourceBean.getClass());
-
-        PropertyAccess[] sourceWrapperPropertyAccesses = sourceWrapper.getPropertyAccesses();
-        PropertyAccess[] targetWrapperPropertyAccesses = targetWrapper.getPropertyAccesses();
-
-        Map<String, PropertyAccess> targetMap = Arrays.stream(targetWrapperPropertyAccesses).filter(e -> properties.contains(e.getPropertyName())).collect(Collectors.toMap(PropertyAccess::getPropertyName, e -> e));
-        for (PropertyAccess sourceWrapperPropertyAccess : sourceWrapperPropertyAccesses) {
-            PropertyAccess targetPropertyAccess = targetMap.get(sourceWrapperPropertyAccess.getPropertyName());
-            if (targetPropertyAccess != null) {
-                copyPropertyDeep(sourceBean, targetBean, sourceWrapperPropertyAccess, targetPropertyAccess);
-            }
-        }
-    }
-
-    private static void copyPropertyDeep(Object sourceBean, Object targetBean, PropertyAccess sourceWrapperPropertyAccess, PropertyAccess targetPropertyAccess) {
-        if (targetPropertyAccess.isHasDeep()) {
-            Object v = sourceWrapperPropertyAccess.get(sourceBean);
-            if (v == null) {
-                targetPropertyAccess.set(targetBean, null);
-            } else {
-                targetPropertyAccess.set(targetBean, copyDeep(v));
-            }
-        } else {
-            targetPropertyAccess.set(targetBean, sourceWrapperPropertyAccess.get(sourceBean));
-        }
-    }
-
 }

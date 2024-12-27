@@ -15,7 +15,7 @@ public class BeanWrapperRunner {
                 // 导入要测试的类
                 .include(BeanWrapperBenchmark.class.getName())
                 // 预热3轮
-                .warmupIterations(6)
+                .warmupIterations(3)
                 // 度量10轮
                 .measurementIterations(5)
                 .mode(Mode.Throughput)

@@ -7,7 +7,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.springframework.cglib.beans.BeanCopier;
 
-import java.beans.PropertyDescriptor;
 import java.nio.file.Paths;
 
 @State(Scope.Benchmark)
@@ -48,7 +47,7 @@ public class BeanWrapperBenchmark {
 
     private final BeanCopier beanCopier = BeanCopier.create(Student.class, Student.class, true);
 
-    @Benchmark
+    // @Benchmark
     public Object cglibCopier() {
         Student student = new Student();
         beanCopier.copy(bean, student, null);
@@ -74,11 +73,10 @@ public class BeanWrapperBenchmark {
 //            System.out.println(String.format("this.propertyAccesses[i] = new PA(\"%s\", %s.class, i);", property.getName(), property.getPropertyType().getTypeName()));
 //        }
 //
-        BeanWrapperConfig.setOutPath(Paths.get("D:\\0_notebook\\supalle-tools\\tools-code\\src\\test\\java"));
         BeanWrapperBenchmark benchmark = new BeanWrapperBenchmark();
         System.out.println(benchmark.setter());
         System.out.println(benchmark.supalleBeanWrapper());
-        System.out.println(benchmark.cglibCopier());
+        // System.out.println(benchmark.cglibCopier());
     }
 
     public static void setV(Object o) {
