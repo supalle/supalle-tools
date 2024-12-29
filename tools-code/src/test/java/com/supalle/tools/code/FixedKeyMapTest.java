@@ -53,7 +53,6 @@ public class FixedKeyMapTest {
     public static List<Map<String, Object>> buildFixedKeyMaps(int size) {
         long start = System.currentTimeMillis();
         FixedKeyIndexes<String> fixedKeyIndexes = FixedKeyIndexes.of("firstname", "lastname", "age", "height", "weight", "homeAddress", "mother", "father");
-        System.out.println(fixedKeyIndexes);
         List<Map<String, Object>> list = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             FixedKeyMap<String, Object> map = new FixedKeyMap<>(fixedKeyIndexes);
