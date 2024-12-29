@@ -3,6 +3,7 @@ package com.supalle.tools.code.beanwrapper;
 import com.supalle.tools.code.beanwrapper.function.*;
 
 import java.lang.invoke.*;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +68,20 @@ public class LambdaMethodFactory {
             );
             return (Supplier<T>) callSite.getTarget().invokeExact();
         } catch (Throwable e) {
-            throw new IllegalStateException("create lambdaNoArgsConstructor error: " + e.getMessage(), e);
+
+            try {
+                Constructor<T> constructor = beanClass.getConstructor();
+                constructor.setAccessible(true);
+                return () -> {
+                    try {
+                        return constructor.newInstance();
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex.getMessage(), ex);
+                    }
+                };
+            } catch (Throwable ex) {
+                throw new IllegalStateException("create lambdaNoArgsConstructor error: " + e.getMessage() + "； reflect ex:" + ex.getMessage(), e);
+            }
         }
     }
 
