@@ -81,6 +81,15 @@
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.openjdk.jol/jol-core -->
+        <dependency>
+            <groupId>org.openjdk.jol</groupId>
+            <artifactId>jol-core</artifactId>
+            <version>0.17</version>
+            <scope>test</scope>
+            <optional>true</optional>
+        </dependency>
+
     </dependencies>
 
     <build>

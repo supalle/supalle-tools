@@ -2,10 +2,7 @@ package com.supalle.tools.code;
 
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -15,6 +12,7 @@ public class FixedKeyMap<K, V> implements Map<K, V> {
     private final Object[] values;
 
     public FixedKeyMap(FixedKeyIndexes<K> fixedKeyIndexes) {
+        Objects.requireNonNull(fixedKeyIndexes, "fixedKeyIndexes must be not null");
         this.fixedKeyIndexes = fixedKeyIndexes;
         values = new Object[fixedKeyIndexes.size()];
     }
